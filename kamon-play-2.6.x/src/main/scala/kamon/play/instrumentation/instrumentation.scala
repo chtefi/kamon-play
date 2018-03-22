@@ -16,6 +16,7 @@
 package kamon.play
 
 import akka.http.scaladsl.model.HttpRequest
+import io.netty.handler.codec.http.{HttpRequest => NettyHttpRequest}
 import kamon.Kamon
 import kamon.context.{Context, TextMap}
 import play.api.libs.ws.StandaloneWSRequest
@@ -28,16 +29,24 @@ package object instrumentation {
   }
 
   def decodeContext(request: HttpRequest): Context = {
-    val headersTextMap = readOnlyTextMapFromHeaders(request)
+    val headers = request.headers.map { h =>  h.name() -> h.value() }.toMap
+    context(headers)
+  }
+
+  def decodeContext(request: NettyHttpRequest): Context = {
+    import scala.collection.JavaConverters._
+    val headers = request.headers().iteratorAsString().asScala.map { h => h.getKey -> h.getValue }.toMap
+    context(headers)
+  }
+
+  private def context(headers: Map[String, String]) = {
+    val headersTextMap = readOnlyTextMapFromHeaders(headers)
     Kamon.contextCodec().HttpHeaders.decode(headersTextMap)
   }
 
-  private def readOnlyTextMapFromHeaders(request: HttpRequest): TextMap = new TextMap {
-
-    private val headersMap = request.headers.map { h => h.name() -> h.value() }.toMap
-
-    override def values: Iterator[(String, String)] = headersMap.iterator
-    override def get(key: String): Option[String] = headersMap.get(key)
+  private def readOnlyTextMapFromHeaders(headers: Map[String, String]): TextMap = new TextMap {
+    override def values: Iterator[(String, String)] = headers.iterator
+    override def get(key: String): Option[String] = headers.get(key)
     override def put(key: String, value: String): Unit = {}
   }
 
