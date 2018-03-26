@@ -15,8 +15,6 @@
 
 package kamon.play
 
-import akka.http.scaladsl.model.HttpRequest
-import io.netty.handler.codec.http.{HttpRequest => NettyHttpRequest}
 import kamon.Kamon
 import kamon.context.{Context, TextMap}
 import play.api.libs.ws.StandaloneWSRequest
@@ -28,18 +26,7 @@ package object instrumentation {
     request.addHttpHeaders(textMap.values.toSeq: _*)
   }
 
-  def decodeContext(request: HttpRequest): Context = {
-    val headers = request.headers.map { h =>  h.name() -> h.value() }.toMap
-    context(headers)
-  }
-
-  def decodeContext(request: NettyHttpRequest): Context = {
-    import scala.collection.JavaConverters._
-    val headers = request.headers().iteratorAsString().asScala.map { h => h.getKey -> h.getValue }.toMap
-    context(headers)
-  }
-
-  private def context(headers: Map[String, String]) = {
+  def context(headers: Map[String, String]): Context = {
     val headersTextMap = readOnlyTextMapFromHeaders(headers)
     Kamon.contextCodec().HttpHeaders.decode(headersTextMap)
   }
