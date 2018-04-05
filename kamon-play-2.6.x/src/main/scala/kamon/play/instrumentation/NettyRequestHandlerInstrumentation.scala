@@ -34,11 +34,6 @@ object NettyRequestHandlerInstrumentation {
     override val method: String = request.method().name()
     override val url: String = request.uri()
     override val spanKind = "play.server.netty"
-
-    private def headers(request: HttpRequest): Map[String, String] = {
-      import scala.collection.JavaConverters._
-      request.headers().iteratorAsString().asScala.map { h => h.getKey -> h.getValue }.toMap
-    }
   }
 
   case class NettyGenericResponse(response: HttpResponse) extends GenericResponse {

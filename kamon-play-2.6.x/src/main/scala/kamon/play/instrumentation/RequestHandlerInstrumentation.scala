@@ -53,13 +53,13 @@ object RequestHandlerInstrumentation {
     val responseFuture = Kamon.withContext(incomingContext.withKey(Span.ContextKey, serverSpan))(responseInvocation)
 
     responseFuture.transform(
-      s = genericResponse => {
-        val response = builder.build(genericResponse)
-        val statusCode = response.statusCode
+      s = response => {
+        val genericResponse = builder.build(response)
+        val statusCode = genericResponse.statusCode
         serverSpan.tag("http.status_code", statusCode)
 
         if(isError(statusCode)) {
-          serverSpan.addError(response.reason)
+          serverSpan.addError(genericResponse.reason)
         }
 
         if(statusCode == StatusCodes.NotFound)
