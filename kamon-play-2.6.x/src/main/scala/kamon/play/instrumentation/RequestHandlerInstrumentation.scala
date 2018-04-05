@@ -40,7 +40,7 @@ trait GenericResponseBuilder[T] {
 
 object RequestHandlerInstrumentation {
 
-  def handleRequest[T](responseInvocation: => Future[T], request: GenericRequest)(implicit builder: GenericResponseBuilder[T]) : Any = {
+  def handleRequest[T](responseInvocation: => Future[T], request: GenericRequest)(implicit builder: GenericResponseBuilder[T]): Future[T] = {
     val incomingContext = context(request.headers)
     val serverSpan = Kamon.buildSpan("unknown-operation")
       .asChildOf(incomingContext.get(Span.ContextKey))
